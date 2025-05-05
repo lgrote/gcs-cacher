@@ -5,6 +5,7 @@ go 1.18
 require (
 	cloud.google.com/go/storage v1.29.0
 	golang.org/x/crypto v0.31.0
+	golang.org/x/oauth2 v0.7.0
 	google.golang.org/api v0.114.0
 )
 
@@ -21,7 +22,6 @@ require (
 	github.com/googleapis/gax-go/v2 v2.7.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
-	golang.org/x/oauth2 v0.7.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect

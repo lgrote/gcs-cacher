@@ -17,6 +17,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	"golang.org/x/crypto/blake2b"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
@@ -35,8 +36,13 @@ type Cacher struct {
 
 // New creates a new cacher capable of saving and restoring the cache.
 func New(ctx context.Context) (*Cacher, error) {
+
+	var cred *google.Credentials
+	cred, err := google.FindDefaultCredentials(ctx)
+
 	client, err := storage.NewClient(ctx,
-		option.WithUserAgent("gcs-cacher/1.0"))
+		option.WithUserAgent("gcs-cacher/1.0"),
+		option.WithCredentials(cred))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create storage client: %w", err)
 	}
