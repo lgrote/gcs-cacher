@@ -259,7 +259,7 @@ func (c *Cacher) Restore(ctx context.Context, i *RestoreRequest) (retErr error) 
 				break
 			}
 			if err != nil {
-				retErr = fmt.Errorf("failed to list %s: %w", key, err)
+				retErr = fmt.Errorf("failed to list %s in bucket %s: %w", key, bucket, err)
 				return
 			}
 
