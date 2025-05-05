@@ -7,11 +7,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
 	"text/template"
 
-	"github.com/sethvargo/gcs-cacher/cacher"
-	"github.com/sethvargo/go-signalcontext"
+	"github.com/lgrote/gcs-cacher/cacher"
+
 	"google.golang.org/api/googleapi"
 )
 
@@ -55,7 +56,7 @@ func init() {
 }
 
 func main() {
-	ctx, done := signalcontext.OnInterrupt()
+	ctx, done := signal.NotifyContext(context.Background(), os.Interrupt)
 
 	err := realMain(ctx)
 	done()

@@ -1,6 +1,14 @@
-FROM alpine AS builder
+FROM golang:1.24-bookworm AS build
 
-FROM scratch
-COPY gcs-cacher /bin/gcs-cacher
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-ENTRYPOINT ["/bin/gcs-cacher"]
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY /cacher ./cacher
+COPY *.go ./
+
+RUN go build -v -ldflags="-s -w" -o /main ./
+
+FROM gcr.io/distroless/base-nossl-debian12:nonroot
+COPY --from=build /main /main
+CMD ["/main"]
+ENTRYPOINT ["/main"]

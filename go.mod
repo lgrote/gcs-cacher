@@ -1,10 +1,9 @@
-module github.com/sethvargo/gcs-cacher
+module github.com/lgrote/gcs-cacher
 
 go 1.18
 
 require (
 	cloud.google.com/go/storage v1.29.0
-	github.com/sethvargo/go-signalcontext v0.2.1
 	golang.org/x/crypto v0.31.0
 	google.golang.org/api v0.114.0
 )
