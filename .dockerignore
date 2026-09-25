@@ -1,0 +1,13 @@
+# Only what the image build (go build of main.go + cacher/) reads.
+.git
+.github
+.idea
+.DS_Store
+*.md
+examples/
+cloudbuild.yaml
+.goreleaser.yml
+LICENSE
+Dockerfile
+.dockerignore
+.gitignore
