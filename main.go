@@ -87,7 +87,7 @@ func realMain(ctx context.Context) error {
 
 	flag.Parse()
 	if len(flag.Args()) > 0 {
-		return fmt.Errorf("no arguments expected")
+		return errors.New("no arguments expected")
 	}
 
 	c, err := cacher.New(ctx)
@@ -134,7 +134,7 @@ func realMain(ctx context.Context) error {
 		fmt.Fprintf(stdout, "finished restoring cache\n")
 		return nil
 	default:
-		return fmt.Errorf("missing command operation")
+		return errors.New("missing command operation")
 	}
 }
 
@@ -173,7 +173,7 @@ func (s *stringSliceFlag) String() string {
 
 func (s *stringSliceFlag) Set(value string) error {
 	var vals []string
-	for _, val := range strings.Split(value, ",") {
+	for val := range strings.SplitSeq(value, ",") {
 		if k := strings.TrimSpace(val); k != "" {
 			vals = append(vals, k)
 		}
