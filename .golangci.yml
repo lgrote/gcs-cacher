@@ -1,0 +1,284 @@
+# golangci-lint v2 — the house config (avacom-infra docs/go-service-standard.md G15).
+# default: none + an explicit allow-list, so a golangci-lint bump never changes the gate silently.
+# Repo-specific: github.com/lgrote/gcs-cacher in wrapcheck/goimports, and per-path exclusions, each with its reason.
+version: "2"
+
+run:
+  tests: true
+
+issues:
+  # every finding, not the first 50 / 3 of a kind
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  default: none
+  enable:
+    # Bugs & errors
+    - errcheck
+    - govet
+    - staticcheck
+    - ineffassign
+    - nilerr
+    - nilnil
+    - bodyclose
+    - durationcheck
+    - fatcontext
+    - spancheck
+    - exhaustive
+    - noctx
+    - forcetypeassert
+    - makezero
+    - recvcheck
+
+    # Code quality
+    - unused
+    - gocritic
+    - revive
+    - unconvert
+    - unparam
+    - copyloopvar
+    - usestdlibvars
+    - modernize
+    - exptostd
+    - intrange
+    - predeclared
+    - mirror
+
+    # Error handling
+    - errorlint
+    - errchkjson
+    - wrapcheck
+
+    # Security
+    - gosec
+
+    # SQL
+    - rowserrcheck
+    - sqlclosecheck
+
+    # Performance
+    - perfsprint
+
+    # Style & naming
+    - misspell
+    - dupword
+    - nolintlint
+    - errname
+    - nakedret
+    - canonicalheader
+
+    # Testing
+    - testifylint
+    - usetesting
+    - thelper
+    - paralleltest
+
+    # Structured logging
+    - sloglint
+
+    # Import governance
+    - depguard
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+      exclude-functions:
+        - io.Copy
+        - (io.Closer).Close
+        - (*os.File).Close
+        - (net/http.ResponseWriter).Write
+
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment # too noisy for minor gains
+
+    staticcheck:
+      checks:
+        - all
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+      disabled-checks:
+        - commentFormatting
+        - captLocal
+        - underef
+        - exitAfterDefer # main.go explicitly calls cancel() before os.Exit
+        - hugeParam # too aggressive for structs passed by value
+        - rangeValCopy # often intentional for clarity
+
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: error-return
+        - name: error-strings
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: var-declaration
+
+    gosec:
+      excludes:
+        - G101 # hardcoded credentials (false positives on OAuth URL constants)
+        - G104 # unhandled errors (errcheck handles this)
+        - G115 # integer overflow int->int32 (false positives on limit params)
+        - G117 # struct fields matching secret patterns (false positives on config structs)
+        - G704 # SSRF via taint analysis (false positives on HTTP clients with configured URLs)
+        - G705 # XSS via taint analysis (false positives in test utilities)
+
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+
+    depguard:
+      rules:
+        main:
+          deny:
+            - pkg: io/ioutil
+              desc: Deprecated since Go 1.16; use io and os packages
+            - pkg: github.com/pkg/errors
+              desc: Use fmt.Errorf with %w or errors.Join
+            - pkg: math/rand$
+              desc: Use math/rand/v2 or crypto/rand
+
+    perfsprint:
+      err-error: true
+      errorf: true
+      sprintf1: true
+
+    exhaustive:
+      default-signifies-exhaustive: true
+
+    errchkjson:
+      check-error-free-encoding: false
+      report-no-exported: false
+
+    nakedret:
+      max-func-lines: 10
+
+    wrapcheck:
+      ignore-package-globs:
+        - github.com/lgrote/gcs-cacher/*
+        - github.com/lgrote/gcs-cacher/*/*
+        - github.com/lgrote/gcs-cacher/*/*/*
+      extra-ignore-sigs:
+        - .Wait(
+        - .ListenAndServe(
+        - .Shutdown(
+      ignore-sig-regexps:
+        - \.Err\(\)
+        - \.Commit\(
+        - \.Write\(p \[\]byte\)
+
+    testifylint:
+      enable-all: true
+
+  exclusions:
+    generated: lax
+    presets:
+      - std-error-handling
+      - common-false-positives
+    rules:
+      # Test files can have longer functions and more relaxed rules
+      - path: _test\.go
+        linters:
+          - gosec
+          - errcheck
+          - gocritic
+          - bodyclose
+          - perfsprint
+          - thelper
+          - usestdlibvars
+          - noctx
+          - wrapcheck
+          - forcetypeassert
+          - musttag
+          - nilnil
+
+      # unusedwrite in tests is noisy (struct fields set for test context)
+      - path: _test\.go
+        linters:
+          - govet
+        text: unusedwrite
+
+      # Allow dot imports in tests for testify
+      - path: _test\.go
+        text: dot-imports
+
+      # Ignore certain issues in generated code
+      - path: storage/(queries|gen/)
+        linters:
+          - gocritic
+          - revive
+          - musttag
+          - wrapcheck
+
+      # Ignore stuttering in package names (common Go pattern)
+      - linters:
+          - revive
+        text: stutters
+
+      # Ignore exported comment requirements (too noisy)
+      - linters:
+          - revive
+        text: "exported:"
+
+      # Ignore defer close/rollback error checks (common pattern)
+      - linters:
+          - errcheck
+        source: defer.*Close\(\)
+      - linters:
+          - errcheck
+        source: defer.*Rollback\(
+
+      # testutil is test infrastructure
+      - path: testutil/
+        linters:
+          - gosec
+
+      # e2e drives one service binary sequentially (shared DB + emulator) and
+      # shells out to go build; the mock issuer is test infrastructure
+      - path: (e2e/|testutil/issuer/)
+        linters:
+          - paralleltest
+          - gosec
+          - noctx
+          - forcetypeassert
+          - errchkjson
+          - wrapcheck
+          - perfsprint
+          - thelper
+
+      # Integration tests share a database and cannot run in parallel
+      - path: integration_test\.go
+        linters:
+          - paralleltest
+
+      # Storage tests share a test database via TestMain
+      - path: storage/
+        linters:
+          - paralleltest
+
+      # Architecture test runs arch-go which is inherently serial
+      - path: architecture/
+        linters:
+          - paralleltest
+
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/lgrote/gcs-cacher
