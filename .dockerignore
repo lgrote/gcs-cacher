@@ -1,9 +1,12 @@
-# Only what the image build (go build of main.go + cacher/) reads.
+# Only what the image build reads: go.mod, go.sum, main.go, cacher/ and .golangci.yml (lint gate).
 .git
 .github
+.claude
 .idea
 .DS_Store
 *.md
+docs/
+k8s/
 examples/
 cloudbuild.yaml
 .goreleaser.yml
