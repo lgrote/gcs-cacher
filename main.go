@@ -65,8 +65,7 @@ func main() {
 		fmt.Fprintf(stderr, "%s\n", err)
 
 		// Check if the error is a Google API error and print extra information.
-		var gerr *googleapi.Error
-		if errors.As(err, &gerr) {
+		if _, ok := errors.AsType[*googleapi.Error](err); ok {
 			fmt.Fprintf(stderr, "Error is a googleapi error:\n%s\n", err.Error())
 		}
 
