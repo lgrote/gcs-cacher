@@ -149,6 +149,8 @@ linters:
               desc: Use fmt.Errorf with %w or errors.Join
             - pkg: math/rand$
               desc: Use math/rand/v2 or crypto/rand
+            - pkg: encoding/json$
+              desc: use encoding/json/v2 + encoding/json/jsontext
 
     perfsprint:
       err-error: true
