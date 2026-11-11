@@ -1,8 +1,9 @@
 # CI: build and push the gcs-cacher builder image (Cloud Build restore/save cache step). Build only,
 # no deploy. The image build runs tests, lint and govulncheck (Dockerfile), hence the bigger machine.
 steps:
-  # buildx with a layer cache in gcr.io/…/$REPO_NAME:buildcache. linux/amd64: the image runs as a
-  # Cloud Build step, and Cloud Build workers are x86.
+  # buildx with a layer cache in europe-west3-docker.pkg.dev/…/buildcache/$REPO_NAME:buildcache, image in
+  # …/images (both beside the Cloud Build region). linux/amd64: the image runs as a Cloud Build step, and
+  # Cloud Build workers are x86.
   - id: setup-buildx
     name: gcr.io/cloud-builders/docker
     args: ['buildx', 'create', '--use']
@@ -12,11 +13,11 @@ steps:
       - buildx
       - build
       - --platform=linux/amd64
-      - --cache-from=type=registry,ref=gcr.io/$PROJECT_ID/$REPO_NAME:buildcache
-      - --cache-to=type=registry,ref=gcr.io/$PROJECT_ID/$REPO_NAME:buildcache,mode=max
-      - --tag=gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA
+      - --cache-from=type=registry,ref=europe-west3-docker.pkg.dev/$PROJECT_ID/buildcache/$REPO_NAME:buildcache
+      - --cache-to=type=registry,ref=europe-west3-docker.pkg.dev/$PROJECT_ID/buildcache/$REPO_NAME:buildcache,mode=max
+      - --tag=europe-west3-docker.pkg.dev/$PROJECT_ID/images/$REPO_NAME:$SHORT_SHA
       # builder images are referenced as :latest from other repos' cloudbuild.yaml
-      - --tag=gcr.io/$PROJECT_ID/$REPO_NAME:latest
+      - --tag=europe-west3-docker.pkg.dev/$PROJECT_ID/images/$REPO_NAME:latest
       - --push
       - .
 options:
